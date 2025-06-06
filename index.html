@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fishy Launcher</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #111;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      z-index: 9999;
+      opacity: 1;
+      overflow: hidden;
+      flex-direction: column;
+      text-align: center;
+    }
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+    }
+    .launcher-text {
+      font-size: 48px;
+      font-weight: bold;
+      letter-spacing: 8px;
+      color: white;
+      opacity: 1;
+    }
+    .launcher-subtitle {
+      font-size: 24px;
+      margin-top: 10px;
+      color: #888;
+      opacity: 1;
+    }
+    .background-fish {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.1;
+      width: 400px;
+      height: auto;
+      z-index: -1;
+    }
+    .fishy-logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      width: 120px;
+      height: auto;
+    }
+    main, header {
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="launcher-text">LAUNCHER</div>
+      <div class="launcher-subtitle">V1</div>
+      <img class="background-fish" src="src/fishyHeader.png" alt="Background Fish" />
+    </div>
+  </div>
+  <header>
+    <div class="window-controls">
+      <button id="min-btn">—</button>
+      <button id="close-btn">✕</button>
+    </div>
+    <img src="src/fishyHeader.png" alt="Fishy Studioz Logo" />
+  </header>
+  <main>
+    <div class="banner">
+      <div class="banner-text">
+        <img src="src/noBslogo.png" />
+        <p>Play Today</p>
+      </div>
+      <img class="metImage" src="src/meta.png" alt="Banner Image" />
+      <div class="banOverlayGradient"></div>
+    </div>
+    <div class="game-tile">
+      <img src="src/ufg.png" alt="Game Icon" />
+      <h2>Untitled FPS Game</h2>
+    </div>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script>
+    function syncGradientWidth() {
+      const img = document.querySelector('.metImage');
+      const gradient = document.querySelector('.banOverlayGradient');
+      if (img && gradient) {
+        gradient.style.width = img.clientWidth + 'px';
+      }
+    }
+    function startLoadingAnimation() {
+      const tl = gsap.timeline();
+      tl.set(['.launcher-text', '.launcher-subtitle'], { opacity: 1 })
+        .set('.background-fish', { opacity: 0.1, scale: 1 })
+        .to(['.launcher-text', '.launcher-subtitle'], {
+          duration: 0.5,
+          opacity: 0,
+          ease: "power2.out"
+        }, 1.5)
+        .to('.background-fish', {
+          duration: 1.2,
+          opacity: 0.8,
+          scale: 0.25,
+          ease: "power2.out"
+        }, 1.8)
+        .to('.fishy-logo', {
+          duration: 0.8,
+          opacity: 1,
+          scale: 1,
+          ease: "back.out(1.7)"
+        }, 2)
+        .to('#loading-screen', {
+          duration: 1,
+          opacity: 0,
+          ease: "power2.inOut",
+          onComplete: () => {
+            document.getElementById('loading-screen').style.display = 'none';
+            if (window.electronAPI) {
+              window.electronAPI.expandWindow();
+            }
+            gsap.to(['header', 'main'], {
+              duration: 1,
+              opacity: 1,
+              pointerEvents: 'auto',
+            });
+          }
+        }, 4);
+    }
+    window.addEventListener('load', () => {
+      syncGradientWidth();
+      startLoadingAnimation();
+    });
+    window.addEventListener('resize', syncGradientWidth);
+    document.getElementById('min-btn').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.minimize();
+      }
+    });
+    document.getElementById('close-btn').addEventListener('click', () => {
+      if (window.electronAPI) {
+        window.electronAPI.close();
+      }
+    });
+    function blockUI(message = 'Launching Roblox...') {
+      let blocker = document.getElementById('roblox-blocker');
+      if (!blocker) {
+        blocker = document.createElement('div');
+        blocker.id = 'roblox-blocker';
+        blocker.style.position = 'fixed';
+        blocker.style.inset = '0';
+        blocker.style.background = 'rgba(0,0,0,0.7)';
+        blocker.style.zIndex = '10000';
+        blocker.style.display = 'flex';
+        blocker.style.flexDirection = 'column';
+        blocker.style.justifyContent = 'center';
+        blocker.style.alignItems = 'center';
+        blocker.style.color = 'white';
+        blocker.style.fontFamily = "'Montserrat', sans-serif";
+        blocker.style.fontSize = '2rem';
+        blocker.style.userSelect = 'none';
+        blocker.innerHTML = `<div style="padding: 32px 48px; background: rgba(20,20,20,0.85); border-radius: 18px; box-shadow: 0 4px 32px #0008; display: flex; flex-direction: column; align-items: center; gap: 18px;"><span style="font-size: 2.2rem; font-weight: 700; letter-spacing: 2px;">${message}</span><span style="font-size: 1.1rem; color: #bbb;">Waiting for Roblox to start...</span><div id="roblox-click-indicator" style="width: 48px; height: 48px; border-radius: 50%; border: 3px solid #fff; opacity: 0.7; margin-top: 18px; position: relative;"></div></div>`;
+        document.body.appendChild(blocker);
+      } else {
+        blocker.style.display = 'flex';
+        blocker.querySelector('span').innerText = message;
+      }
+    }
+    function unblockUI() {
+      const blocker = document.getElementById('roblox-blocker');
+      if (blocker) blocker.style.display = 'none';
+    }
+    function showClickIndicator(x, y) {
+      const blocker = document.getElementById('roblox-blocker');
+      if (!blocker) return;
+      let indicator = document.createElement('div');
+      indicator.className = 'roblox-animated-click';
+      indicator.style.position = 'fixed';
+      indicator.style.left = (x - 24) + 'px';
+      indicator.style.top = (y - 24) + 'px';
+      indicator.style.width = '48px';
+      indicator.style.height = '48px';
+      indicator.style.borderRadius = '50%';
+      indicator.style.border = '3px solid #fff';
+      indicator.style.opacity = '0.8';
+      indicator.style.pointerEvents = 'none';
+      indicator.style.transition = 'transform 0.3s cubic-bezier(.4,2,.6,1), opacity 0.4s';
+      indicator.style.transform = 'scale(1)';
+      document.body.appendChild(indicator);
+      setTimeout(() => {
+        indicator.style.transform = 'scale(1.7)';
+        indicator.style.opacity = '0';
+      }, 10);
+      setTimeout(() => {
+        indicator.remove();
+      }, 400);
+    }
+    document.addEventListener('click', function(e) {
+      const blocker = document.getElementById('roblox-blocker');
+      if (blocker && blocker.style.display !== 'none') {
+        showClickIndicator(e.clientX, e.clientY);
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
+    function waitForRobloxExe(callback) {
+      const interval = setInterval(() => {
+        if (window.electronAPI && window.electronAPI.isRobloxRunning) {
+          window.electronAPI.isRobloxRunning().then((running) => {
+            if (running) {
+              clearInterval(interval);
+              callback();
+            }
+          });
+        }
+      }, 1000);
+    }
+    function handleRobloxLaunch(uri) {
+      blockUI();
+      if (window.electronAPI && window.electronAPI.openExternal) {
+        window.electronAPI.openExternal(uri);
+        let robloxStarted = false;
+        const minBlockTime = 2500;
+        const startTime = Date.now();
+        waitForRobloxExe(() => {
+          robloxStarted = true;
+          const elapsed = Date.now() - startTime;
+          if (elapsed < minBlockTime) {
+            setTimeout(unblockUI, minBlockTime - elapsed);
+          } else {
+            unblockUI();
+          }
+        });
+        setTimeout(() => { if (!robloxStarted) unblockUI(); }, 10000);
+      } else {
+        window.open(uri, '_blank');
+        setTimeout(unblockUI, 3500);
+      }
+    }
+    document.querySelector('.banner').addEventListener('click', () => {
+      handleRobloxLaunch('roblox://placeId=17169734163');
+    });
+    document.querySelector('.game-tile').addEventListener('click', () => {
+      handleRobloxLaunch('roblox://placeId=9541558008');
+    });
+  </script>
+</body>
+</html>

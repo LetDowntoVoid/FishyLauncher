@@ -1,0 +1,18 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.fishystudioz.launcher
+productName: Fishy Studioz Launcher
+files:
+  - filter:
+      - '**/*'
+      - '!dist'
+      - '!node_modules/.cache'
+win:
+  target: nsis
+  icon: assets/icon.ico
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+electronVersion: 30.5.1
