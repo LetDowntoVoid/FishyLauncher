@@ -1,6 +1,9 @@
 const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
+const { Menu } = require('electron');
+Menu.setApplicationMenu(Menu.buildFromTemplate([]));
+
 
 let win;
 
@@ -16,11 +19,16 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      devTools: false,
     },
     show: false,
   });
 
   win.loadFile('index.html');
+
+  win.webContents.on('devtools-opened', () => {
+    win.webContents.closeDevTools();
+  });
 
   win.once('ready-to-show', () => {
     win.show();
@@ -54,6 +62,10 @@ function createWindow() {
   });
 }
 
+app.commandLine.appendSwitch('disable-site-isolation-trials');
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-features', 'ElectronEnableWebSQL,ElectronSerialService');
+app.commandLine.appendSwitch('disable-dev-tools');
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
