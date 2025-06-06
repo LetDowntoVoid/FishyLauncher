@@ -1,8 +1,8 @@
-version: 1.0.4-alpha
+version: 1.0.5-alpha
 files:
-  - url: Fishy-Studioz-Launcher-Setup-1.0.4-alpha.exe
-    sha512: 9KfmzH7pHQfqTFG36bqsYgP49wZvZO5Sb6JKk5QesolJ0W8ekhyejCwuWj/SxscWNJKsziKNf6O3qe6yvi06Cw==
-    size: 164882977
-path: Fishy-Studioz-Launcher-Setup-1.0.4-alpha.exe
-sha512: 9KfmzH7pHQfqTFG36bqsYgP49wZvZO5Sb6JKk5QesolJ0W8ekhyejCwuWj/SxscWNJKsziKNf6O3qe6yvi06Cw==
-releaseDate: '2025-06-06T16:48:05.776Z'
+  - url: Fishy-Studioz-Launcher-Setup-1.0.5-alpha.exe
+    sha512: KDvgKEor8qbjOBcwAalWyuhMGpIyje73WQmDp12nXBw+3zXe5kww+kimKCqpUXaAYYImZIujL+F58IrC5T96RQ==
+    size: 78383253
+path: Fishy-Studioz-Launcher-Setup-1.0.5-alpha.exe
+sha512: KDvgKEor8qbjOBcwAalWyuhMGpIyje73WQmDp12nXBw+3zXe5kww+kimKCqpUXaAYYImZIujL+F58IrC5T96RQ==
+releaseDate: '2025-06-06T16:58:38.028Z'

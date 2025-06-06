@@ -3,6 +3,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const { Menu } = require('electron');
 const https = require('https');
+const { autoUpdater } = require("electron-updater");
 Menu.setApplicationMenu(Menu.buildFromTemplate([]));
 
 const fs = require('fs');
@@ -160,6 +161,28 @@ app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-features', 'ElectronEnableWebSQL,ElectronSerialService');
 app.commandLine.appendSwitch('disable-dev-tools');
 app.whenReady().then(createWindow);
+
+app.on('ready', () => {
+  createWindow();
+
+  // Check for updates and notify
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('update-available', () => {
+    console.log('Update available. Downloading...');
+    // Optionally, notify the user in your UI
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    console.log('Update downloaded. Will install on quit.');
+    // Optionally, prompt the user to restart now:
+    // autoUpdater.quitAndInstall();
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('AutoUpdater error:', err);
+  });
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

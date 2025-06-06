@@ -1,6 +1,6 @@
 {
   "name": "fishy-studioz",
-  "version": "1.0.4-alpha",
+  "version": "1.0.5-alpha",
   "author": "LetDowntoVoid",
   "description": "Fishy Studioz Launcher",
   "main": "main.js",
@@ -31,6 +31,16 @@
   },
   "devDependencies": {
     "electron": "^30.0.0",
-    "electron-builder": "^24.14.1"
-  }
+    "electron-builder": "^26.0.10"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "LetDowntoVoid",
+      "repo": "FishyLauncher"
+    }
+  ]
 }
