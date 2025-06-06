@@ -66,9 +66,59 @@
       pointer-events: none;
       overflow: hidden;
     }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 80px;
+      height: 100%;
+      background: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      z-index: 1000;
+    }
+    .sidebar-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin: 10px 0;
+      padding: 0;
+      width: 100%;
+      text-align: center;
+    }
+    .sidebar-btn img {
+      width: 40px;
+      height: auto;
+      opacity: 0.9;
+      transition: opacity 0.3s;
+    }
+    .sidebar-btn:hover img {
+      opacity: 1;
+    }
+    .page {
+      display: none;
+    }
   </style>
 </head>
 <body>
+
+  <div class="settingsPage" id="settings-page">
+    <div class="settingsBody">
+      <h1 class="title">SETTINGS</h1>
+      <div class="options">
+        <div class="option">
+          <label for="autoLaunch-select">Auto Launch to Game</label>
+          <select id="autoLaunch-select">
+            <option value="direct">Launch in-game</option>
+            <option value="link">Open Roblox Page</option>
+          </select>
+        </div>
+      </div>
+      <p>Version V1.0.1-pre-alpha</p>
+    </div>
+  </div>
   <div id="loading-screen">
     <div class="loading-content">
       <div class="launcher-text">LAUNCHER</div>
@@ -83,18 +133,58 @@
     </div>
     <img src="src/fishyHeader.png" alt="Fishy Studioz Logo" />
   </header>
-  <main>
-    <div class="banner">
-      <div class="banner-text">
-        <img src="src/noBslogo.png" />
-        <p>Play Today</p>
-      </div>
-      <img class="metImage" src="src/meta.png" alt="Banner Image" />
-      <div class="banOverlayGradient"></div>
+  <div class="sidebar">
+    <button style="filter:invert()" class="sidebar-btn inverted" data-page="home"><img src="src/home.png" alt="Home" title="Home" /></button>
+    <button class="sidebar-btn inverted" style="filter:invert()" data-page="overheat"><img src="src/overheatLogoBuddy.svg" alt="Overheat" title="Overheat" /></button>
+    <button class="sidebar-btn" data-page="ufg"><img src="src/ufg.png" alt="UFG" title="UFG" /></button>
+    <div class="sidebar-bottom">
+      <button class="sidebar-btn settings-sidebar" title="Settings"><img src="src/cog.png" alt="Settings" /></button>
     </div>
-    <div class="game-tile">
-      <img src="src/ufg.png" alt="Game Icon" />
-      <h2>Untitled FPS Game</h2>
+  </div>
+  <main>
+    <div class="page" id="page-home" style="display: block;">
+      <div class="banner">
+        <div class="banner-text">
+          <img src="src/noBslogo.png" />
+          <p>Play Today</p>
+        </div>
+        <img class="metImage" src="src/meta.png" alt="Banner Image" />
+        <div class="banOverlayGradient"></div>
+      </div>
+      <div class="title">Why are you using this.</div>
+      <div class="title">This is a meme.</div>
+    </div>
+
+    
+    <div class="page" id="page-overheat" style="display:none">
+      <div class="game-hero">
+        <img src="src/noBslogo.png" alt="Overheat" class="game-logo" />
+        <div class="game-info-row">
+          <div class="game-info">
+            <div class="game-title title">Overheat</div>
+            <div class="game-subtitle">The game built from the ashes of its predecessor</div>
+            <div class="game-details">
+              
+            </div>
+          </div>
+          <button class="play-btn" id="play-overheat">PLAY</button>
+        </div>
+      </div>
+    </div>
+    <div class="page" id="page-ufg" style="display:none">
+      <div class="game-hero">
+        <img src="src/ufg.png" alt="UFG" class="game-logo" />
+        <div class="game-info-row">
+          <div class="game-info">
+            <div class="game-title title">Untitled FPS Game</div>
+            <div class="game-subtitle">IT'S DEAD.</div>
+            <div class="game-details">
+              
+            </div>
+          </div>
+          <button class="play-btn" id="play-ufg">PLAY</button>
+        </div>
+      </div>
     </div>
   </main>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -232,33 +322,105 @@
         }
       }, 1000);
     }
-    function handleRobloxLaunch(uri) {
-      blockUI();
-      if (window.electronAPI && window.electronAPI.openExternal) {
-        window.electronAPI.openExternal(uri);
-        let robloxStarted = false;
-        const minBlockTime = 2500;
-        const startTime = Date.now();
-        waitForRobloxExe(() => {
-          robloxStarted = true;
-          const elapsed = Date.now() - startTime;
-          if (elapsed < minBlockTime) {
-            setTimeout(unblockUI, minBlockTime - elapsed);
-          } else {
-            unblockUI();
-          }
-        });
-        setTimeout(() => { if (!robloxStarted) unblockUI(); }, 10000);
+    function getAutoLaunchSetting() {
+      const select = document.getElementById('autoLaunch-select');
+      return select ? select.value : 'direct';
+    }
+
+    function handleRobloxLaunch(uri, which) {
+      const autoLaunch = getAutoLaunchSetting();
+      if (autoLaunch === 'direct') {
+        blockUI();
+        if (window.electronAPI && window.electronAPI.openExternal) {
+          window.electronAPI.openExternal(uri);
+          let robloxStarted = false;
+          const minBlockTime = 2500;
+          const startTime = Date.now();
+          waitForRobloxExe(() => {
+            robloxStarted = true;
+            const elapsed = Date.now() - startTime;
+            if (elapsed < minBlockTime) {
+              setTimeout(unblockUI, minBlockTime - elapsed);
+            } else {
+              unblockUI();
+            }
+          });
+          setTimeout(() => { if (!robloxStarted) unblockUI(); }, 10000);
+        } else {
+          window.open(uri, '_blank');
+          setTimeout(unblockUI, 3500);
+        }
       } else {
-        window.open(uri, '_blank');
-        setTimeout(unblockUI, 3500);
+        if (which === 'overheat') {
+          if (window.electronAPI && window.electronAPI.openExternal) {
+            window.electronAPI.openExternal('https://www.roblox.com/games/17169734163');
+          } else {
+            window.open('https://www.roblox.com/games/17169734163', '_blank');
+          }
+        } else if (which === 'ufg') {
+          if (window.electronAPI && window.electronAPI.openExternal) {
+            window.electronAPI.openExternal('https://www.roblox.com/games/9541558008/');
+          } else {
+            window.open('https://www.roblox.com/games/9541558008/', '_blank');
+          }
+        }
       }
     }
-    document.querySelector('.banner').addEventListener('click', () => {
-      handleRobloxLaunch('roblox://placeId=17169734163');
+    window.addEventListener('DOMContentLoaded', () => {
+      // Massive play button handlers
+      const playOverheat = document.getElementById('play-overheat');
+      if (playOverheat) {
+        playOverheat.addEventListener('click', () => {
+          handleRobloxLaunch('roblox://placeId=17169734163', 'overheat');
+        });
+      }
+      const playUFG = document.getElementById('play-ufg');
+      if (playUFG) {
+        playUFG.addEventListener('click', () => {
+          handleRobloxLaunch('roblox://placeId=9541558008', 'ufg');
+        });
+      }
     });
-    document.querySelector('.game-tile').addEventListener('click', () => {
-      handleRobloxLaunch('roblox://placeId=9541558008');
+    var initsettingstate = false;
+
+    // Sidebar navigation logic
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => {
+        if (p.id === 'page-' + page) {
+          p.style.display = 'block';
+        } else {
+          p.style.display = 'none';
+        }
+        p.classList.remove('active');
+      });
+      const el = document.getElementById('page-' + page);
+      if (el) el.classList.add('active');
+    }
+    document.querySelectorAll('.sidebar-btn[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showPage(btn.getAttribute('data-page'));
+        document.getElementById('settings-page').classList.remove('active');
+      });
+    });
+    document.querySelector('.settings-sidebar').addEventListener('click', () => {
+      document.getElementById('settings-page').classList.toggle('active');
+    });
+    // Show home by default
+    showPage('home');
+
+    // Close settings if clicking outside settingsBody
+    document.getElementById('settings-page').addEventListener('mousedown', function(e) {
+      const settingsBody = document.querySelector('.settingsBody');
+      if (e.target === this && !settingsBody.contains(e.target)) {
+        this.classList.remove('active');
+      }
+    });
+
+    // Close settings on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.getElementById('settings-page').classList.remove('active');
+      }
     });
   </script>
 </body>

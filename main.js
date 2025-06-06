@@ -2,9 +2,12 @@ const { app, BrowserWindow, ipcMain, screen, shell } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const { Menu } = require('electron');
+const https = require('https');
 Menu.setApplicationMenu(Menu.buildFromTemplate([]));
 
-
+const fs = require('fs');
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+const CURRENT_VERSION = packageJson.version;
 let win;
 
 function createWindow() {
@@ -24,7 +27,37 @@ function createWindow() {
     show: false,
   });
 
-  win.loadFile('index.html');
+  checkForUpdates(async (latest) => {
+    if (!latest) {
+      win.loadFile('index.html');
+      return;
+    }
+    const latestVersion = latest.tag_name;
+    const isPrerelease = latest.prerelease;
+    const isDraft = latest.draft;
+    const isNewer = compareVersions(latestVersion, CURRENT_VERSION) > 0;
+
+    if (isNewer && !isDraft) {
+      if (!isPrerelease) {
+        // Production update: force update
+        shell.openExternal(latest.html_url);
+        app.quit();
+      } else {
+        // Prerelease: ask user
+        const { response } = await win.webContents.executeJavaScript(
+          `confirm("A prerelease update (${latestVersion}) is available. Do you want to update?")`
+        );
+        if (response) {
+          shell.openExternal(latest.html_url);
+          app.quit();
+        } else {
+          win.loadFile('index.html');
+        }
+      }
+    } else {
+      win.loadFile('index.html');
+    }
+  });
 
   win.webContents.on('devtools-opened', () => {
     win.webContents.closeDevTools();
@@ -60,6 +93,39 @@ function createWindow() {
       event.reply('roblox-running-result', isRunning);
     });
   });
+}
+
+function checkForUpdates(callback) {
+  const options = {
+    hostname: 'api.github.com',
+    path: '/repos/LetDowntoVoid/FishyLauncher/releases',
+    headers: { 'User-Agent': 'FishyLauncher' }
+  };
+  https.get(options, res => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => {
+      try {
+        const releases = JSON.parse(data);
+        if (!Array.isArray(releases) || releases.length === 0) return callback(null);
+        const latest = releases[0];
+        callback(latest);
+      } catch (e) {
+        callback(null);
+      }
+    });
+  }).on('error', () => callback(null));
+}
+
+function compareVersions(a, b) {
+  // Remove "v" and split by non-numeric
+  const pa = a.replace(/^v/, '').split(/[\.-]/).map(x => isNaN(x) ? x : Number(x));
+  const pb = b.replace(/^v/, '').split(/[\.-]/).map(x => isNaN(x) ? x : Number(x));
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) > (pb[i] || 0)) return 1;
+    if ((pa[i] || 0) < (pb[i] || 0)) return -1;
+  }
+  return 0;
 }
 
 app.commandLine.appendSwitch('disable-site-isolation-trials');

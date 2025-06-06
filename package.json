@@ -1,6 +1,7 @@
 {
   "name": "fishy-studioz",
-  "version": "1.0.1",
+  "version": "1.0.2-alpha",
+  "author": "LetDowntoVoid",
   "description": "Fishy Studioz Launcher",
   "main": "main.js",
   "scripts": {
