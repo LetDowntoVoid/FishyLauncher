@@ -187,6 +187,16 @@
       </div>
     </div>
   </main>
+  <div class="updatePrompt" id="update-prompt" style="display:none;">
+    <div class="settingsBody" style="min-width:340px;">
+      <div class="title" id="update-title">Update Available | Pre Release</div>
+      <div id="update-desc" style="margin-bottom:18px;"></div>
+      <div style="display:flex; gap:18px; justify-content:center;">
+        <button id="update-accept" class="sidebar-btn settings-sidebar">Update</button>
+        <button id="update-decline" class="sidebar-btn settings-sidebar">Skip</button>
+      </div>
+    </div>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script>
     function syncGradientWidth() {
@@ -422,6 +432,55 @@
         document.getElementById('settings-page').classList.remove('active');
       }
     });
+
+    // Show update prompt from main process
+    if (window.require) {
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.on('show-update-prompt', (event, data) => {
+        showUpdatePrompt(data);
+      });
+    }
+    if (window.electronAPI) {
+      window.electronAPI.onUpdatePrompt((event, data) => {
+        showUpdatePrompt(data);
+      });
+    }
+    function showUpdatePrompt(data) {
+      // Hide all main UI elements
+      document.getElementById('loading-screen').style.display = 'none';
+      document.querySelector('main').style.display = 'none';
+      document.querySelector('header').style.display = 'none';
+      document.querySelector('.sidebar').style.display = 'none';
+      document.getElementById('settings-page').style.display = 'none';
+
+      // Show the update overlay
+      const prompt = document.getElementById('update-prompt');
+      prompt.style.display = 'flex';
+      document.getElementById('update-title').innerText = `Update Available | ${data.version}`;
+      document.getElementById('update-desc').innerText = "A prerelease update is available. Would you like to download and install it?";
+      document.getElementById('update-accept').onclick = () => {
+        document.getElementById('update-prompt').style.display = 'none';
+        if (window.require) {
+          const { ipcRenderer } = require('electron');
+          ipcRenderer.send('prerelease-update-choice', true, data.asset);
+        } else if (window.electronAPI) {
+          window.electronAPI.sendPrereleaseChoice(true, data.asset);
+        }
+        // Do NOT expand/fullscreen here, as app will quit for update
+      };
+      document.getElementById('update-decline').onclick = () => {
+        document.getElementById('update-prompt').style.display = 'none';
+        // Now show the rest of the UI and expand/fullscreen
+        document.querySelector('main').style.display = '';
+        document.querySelector('header').style.display = '';
+        document.querySelector('.sidebar').style.display = '';
+        document.getElementById('settings-page').style.display = '';
+        if (typeof syncGradientWidth === "function") syncGradientWidth();
+        if (window.electronAPI && window.electronAPI.expandWindow) {
+          window.electronAPI.expandWindow();
+        }
+      };
+    }
   </script>
 </body>
 </html>

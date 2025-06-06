@@ -11,4 +11,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     });
     ipcRenderer.send('check-roblox-running');
   }),
+  onUpdatePrompt: (callback) => ipcRenderer.on('show-update-prompt', callback),
+  sendPrereleaseChoice: (accepted, url) => ipcRenderer.send('prerelease-update-choice', accepted, url)
 });

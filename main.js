@@ -29,6 +29,7 @@ function createWindow() {
 
   checkForUpdates(async (latest) => {
     if (!latest) {
+      console.log("FishyLauncher: No update info found.");
       win.loadFile('index.html');
       return;
     }
@@ -37,22 +38,38 @@ function createWindow() {
     const isDraft = latest.draft;
     const isNewer = compareVersions(latestVersion, CURRENT_VERSION) > 0;
 
+    console.log(`FishyLauncher: Latest release found: ${latestVersion} (${isPrerelease ? "Prerelease" : "Production"}) - ${latest.html_url}`);
+
+    // Helper to get first installer asset
+    function getInstallerAsset(release) {
+      if (!release.assets) return null;
+      return release.assets.find(asset =>
+        asset.name.match(/\.(exe|msi|zip)$/i)
+      );
+    }
+
     if (isNewer && !isDraft) {
       if (!isPrerelease) {
-        // Production update: force update
-        shell.openExternal(latest.html_url);
+        // Production: force update, open installer asset if available
+        const asset = getInstallerAsset(latest);
+        if (asset) {
+          console.log(`FishyLauncher: Downloading installer: ${asset.browser_download_url}`);
+          shell.openExternal(asset.browser_download_url);
+        } else {
+          shell.openExternal(latest.html_url);
+        }
         app.quit();
       } else {
-        // Prerelease: ask user
-        const { response } = await win.webContents.executeJavaScript(
-          `confirm("A prerelease update (${latestVersion}) is available. Do you want to update?")`
-        );
-        if (response) {
-          shell.openExternal(latest.html_url);
-          app.quit();
-        } else {
-          win.loadFile('index.html');
-        }
+        // Prerelease: load UI, then prompt via IPC
+        win.loadFile('index.html');
+        win.once('ready-to-show', () => {
+          win.show();
+          win.webContents.send('show-update-prompt', {
+            version: latestVersion,
+            url: latest.html_url,
+            asset: getInstallerAsset(latest)?.browser_download_url || latest.html_url
+          });
+        });
       }
     } else {
       win.loadFile('index.html');
@@ -93,6 +110,14 @@ function createWindow() {
       event.reply('roblox-running-result', isRunning);
     });
   });
+
+  // Listen for user's prerelease update choice from renderer
+  ipcMain.on('prerelease-update-choice', (event, accepted, url) => {
+    if (accepted) {
+      shell.openExternal(url);
+      app.quit();
+    }
+  });
 }
 
 function checkForUpdates(callback) {
@@ -108,8 +133,11 @@ function checkForUpdates(callback) {
       try {
         const releases = JSON.parse(data);
         if (!Array.isArray(releases) || releases.length === 0) return callback(null);
-        const latest = releases[0];
-        callback(latest);
+        // Find the latest non-draft release by published_at date
+        const latest = releases
+          .filter(r => !r.draft)
+          .sort((a, b) => new Date(b.published_at) - new Date(a.published_at))[0];
+        callback(latest || null);
       } catch (e) {
         callback(null);
       }
@@ -118,7 +146,6 @@ function checkForUpdates(callback) {
 }
 
 function compareVersions(a, b) {
-  // Remove "v" and split by non-numeric
   const pa = a.replace(/^v/, '').split(/[\.-]/).map(x => isNaN(x) ? x : Number(x));
   const pb = b.replace(/^v/, '').split(/[\.-]/).map(x => isNaN(x) ? x : Number(x));
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
